@@ -1,6 +1,6 @@
 {
-  "name": "heroku-nodejs",
-  "description": "heroku-nodejs",
+  "name": "nodejs-nicenight",
+  "description": "nodejs-nicenight",
   "env": {
     "PORT": {
       "description": "port",
