@@ -2,8 +2,8 @@
   "name": "heroku-nodejs",
   "description": "heroku-nodejs",
   "env": {
-    "METHOD": {
-      "PORT": "port",
+    "PORT": {
+      "description": "port",
       "value": "80"
     },
   }
