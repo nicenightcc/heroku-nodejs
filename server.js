@@ -25,19 +25,20 @@ function getHtml(url) {
 }
 
 const server = require('http').createServer((request, response) => {
-    console.log(request.method + ': ' + request.url);
     response.writeHead(200, {
         'Content-Type': 'text/plain'
     });
     if (request.method === 'GET') {
         let query = url.parse(request.url, true).query;
-        if (typeof query.url === 'undefined') {
+        if (typeof query.u === 'undefined') {
+            response.write('404 NOT FOUND');
             response.end();
             return;
         }
-        getHtml(query.url).then(r => {
+        getHtml(atob(query.u)).then(r => {
             let matches = r.match(/img\/qr\/([0-9|a-z|A-Z]+[_|-]+[0-9|a-z|A-Z]+).png/g);
             if (matches == null) {
+                response.write('404 NOT FOUND');
                 response.end();
                 return;
             }
@@ -49,11 +50,12 @@ const server = require('http').createServer((request, response) => {
                     if (match != null) {
                         let m = match[1];
                         decoded.push(m);
-                        response.write(m);
                     }
                 }));
             }
             Promise.all(promises).then(() => {
+                let result = decoded.join('\n');
+                response.write(btoa(result));
                 response.end();
             })
         });
