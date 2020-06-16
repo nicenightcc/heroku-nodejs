@@ -2,14 +2,25 @@
 
 let http = require('http');
 let fs = require('fs');
+let url = require('url');
 
 let server = http.createServer((request, response) => {
     console.log(request.method + ': ' + request.url);
     if (request.method === 'GET') {
-        response.writeHead(200, {
-            'Content-Type': 'text/html'
-        });
-        fs.createReadStream('./404.html').pipe(response);
+        let query = url.parse(request.url, true).query;
+        http.get(query.url, (r) => {
+            let body = '';
+            r.on('data', function (data) {
+                body += data;
+            });
+            r.on('end', function () {
+                response.writeHead(200, {
+                    'Content-Type': 'text/plain'
+                });
+                response.write(body);
+                response.end();
+            });
+        })
     }
 });
 
