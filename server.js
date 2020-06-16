@@ -3,17 +3,15 @@
 const fs = require('fs');
 const url = require('url');
 const http = require('https');
-console.log(Buffer);
-const buf = Buffer.from('aHR0cHM6Ly9teS5pc2hhZG93eC5iaXo=', 'base64');
-console.log(buf.toString());
-function atob(s) {
+
+function btoa(s) {
     return Buffer.from(s).toString('base64');
 }
 
-function btoa(s) {
+function atob(s) {
     return Buffer.from(s, 'base64').toString();
 }
-console.log(atob('aHR0cHM6Ly9teS5pc2hhZG93eC5iaXo='));
+
 function getHtml(url) {
     return new Promise((resolve, reject) => {
         http.get(url, (r) => {
