@@ -4,7 +4,8 @@ const fs = require('fs');
 const url = require('url');
 const http = require('https');
 console.log(Buffer);
-
+const buf = Buffer.from('hello', 'ascii');
+console.log(buf.toString('hex'));
 function atob(s) {
     return Buffer.from(s).toString('base64');
 }
