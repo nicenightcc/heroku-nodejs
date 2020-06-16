@@ -28,24 +28,12 @@ const server = require('http').createServer((request, response) => {
             response.end();
             return;
         }
-        response.writeHead(200, {
-            'Content-Type': 'text/plain'
-        });
         getHtml(query.url).then(r => {
-            let matches = r.match(/img\/qr\/([0-9|a-z|A-Z]+[_|-]+[0-9|a-z|A-Z]+).png/g);
-            let promises = [];
-            let decoded = [];
-            for (let url of matches) {
-                promises.push(getHtml('https://zxing.org/w/decode?u=' + query.url + '/' + url).then(r => {
-                    let m = r.match(/<pre>([a-z]+:\/\/[0-9|a-z|A-Z|=]+)</)[1];
-                    decoded.push(m);
-                    response.write(m);
-                }));
-
-            }
-            Promise.all(promises).then(r => {
-                response.end();
+            response.writeHead(200, {
+                'Content-Type': 'text/plain'
             });
+            response.write(r);
+            response.end();
         });
     }
 });
