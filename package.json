@@ -3,8 +3,8 @@
     "description": "a nodejs web application",
     "version": "0.4.0",
     "main": "server.js",
-    "dependencies": {
-        "express": "3.4.x"
+    "scripts": {
+      "start": "node server.js"
     },
     "engines": {
         "node": "0.10.x",

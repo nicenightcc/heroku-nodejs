@@ -1,30 +1,18 @@
 var http = require('http');
-var url = require("url");
-var express = require('express');
-var app = express();
-var fs = require("fs");
-app.get('/', function (request, response) {
-    var query = url.parse(request.url, true).query;
-    http.get(query.url, (r) => {
-        var body = '';
-        r.on('data', function (data) {
-            body += data;
+var fs = require('fs');
+
+var server = http.createServer((request, response) => {
+    console.log(request.method + ': ' + request.url);
+    if (request.method === 'GET') {
+        response.writeHead(200, {
+            'Content-Type': 'text/html'
         });
-        r.on('end', function () {
-            // 数据接收完成
-            response.writeHead(200, { 'Content-Type': 'text/plain' });
-            response.write(body);
-            response.end();
-        });
-    })
-})
+        fs.createReadStream('./404.html').pipe(response);
+    }
+});
 
-var server = app.listen(process.env.PORT || 80, function () {
+var serverPort = process.env.PORT || 5000;
 
-    var host = server.address().address
-    var port = server.address().port
+server.listen(serverPort);
 
-    console.log("Server running at http://%s:%s", host, port)
-
-})
-
+console.log(`Server Running at http://127.0.0.1:${serverPort}/`);
