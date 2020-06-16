@@ -43,7 +43,7 @@ const server = require('http').createServer((request, response) => {
             response.end();
             return;
         }
-        console.log(atob(query.u))
+        console.log(query.u);
         getHtml(atob(query.u)).then(r => {
             let matches = r.match(/img\/qr\/([0-9|a-z|A-Z]+[_|-]+[0-9|a-z|A-Z]+).png/g);
             if (matches == null) {
