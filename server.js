@@ -41,7 +41,9 @@ const server = require('http').createServer((request, response) => {
                 }));
 
             }
-            response.end();
+            Promise.all(promises).then(r => {
+                response.end();
+            })
         });
     }
 });
