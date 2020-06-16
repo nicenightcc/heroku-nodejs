@@ -1,7 +1,9 @@
-var http = require('http');
-var fs = require('fs');
+'use strict';
 
-var server = http.createServer((request, response) => {
+let http = require('http');
+let fs = require('fs');
+
+let server = http.createServer((request, response) => {
     console.log(request.method + ': ' + request.url);
     if (request.method === 'GET') {
         response.writeHead(200, {
@@ -11,7 +13,7 @@ var server = http.createServer((request, response) => {
     }
 });
 
-var serverPort = process.env.PORT || 5000;
+let serverPort = process.env.PORT || 5000;
 
 server.listen(serverPort);
 
