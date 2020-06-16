@@ -4,14 +4,12 @@ const fs = require('fs');
 const url = require('url');
 const http = require('https');
 
-console.log(Promise);
-
 function getHtml(url) {
     return new Promise((resolve, reject) => {
         http.get(url, (r) => {
             if (r.statusCode == 302) {
-                getHtml(r.headers.location).then(r => {
-                    resolve(r);
+                getHtml(r.headers.location).then(res => {
+                    resolve(res);
                 });
             } else {
                 let body = '';
@@ -38,8 +36,26 @@ const server = require('http').createServer((request, response) => {
             return;
         }
         getHtml(query.url).then(r => {
-            response.write(r);
-            response.end();
+            let matches = r.match(/img\/qr\/([0-9|a-z|A-Z]+[_|-]+[0-9|a-z|A-Z]+).png/g);
+            if (matches == null) {
+                response.end();
+                return;
+            }
+            let promises = [];
+            let decoded = [];
+            for (let url of matches) {
+                promises.push(getHtml('https://zxing.org/w/decode?u=' + query.url + '/' + url).then(r => {
+                    let match = r.match(/<pre>([a-z]+:\/\/[0-9|a-z|A-Z|=]+)</);
+                    if (match != null) {
+                        let m = match[1];
+                        decoded.push(m);
+                        response.write(m);
+                    }
+                }));
+            }
+            Promise.all(promises).then(() => {
+                response.end();
+            })
         });
     }
 });
