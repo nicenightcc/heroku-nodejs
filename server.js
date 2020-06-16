@@ -4,6 +4,14 @@ const fs = require('fs');
 const url = require('url');
 const http = require('https');
 
+function atob(s) {
+    return Buffer.from(s).toString('base64');
+}
+
+function btoa(s) {
+    return Buffer.from(s, 'base64').toString();
+}
+
 function getHtml(url) {
     return new Promise((resolve, reject) => {
         http.get(url, (r) => {
@@ -35,6 +43,7 @@ const server = require('http').createServer((request, response) => {
             response.end();
             return;
         }
+        console.log(atob(query.u))
         getHtml(atob(query.u)).then(r => {
             let matches = r.match(/img\/qr\/([0-9|a-z|A-Z]+[_|-]+[0-9|a-z|A-Z]+).png/g);
             if (matches == null) {
@@ -46,7 +55,7 @@ const server = require('http').createServer((request, response) => {
             let decoded = [];
             for (let url of matches) {
                 promises.push(getHtml('https://zxing.org/w/decode?u=' + query.url + '/' + url).then(r => {
-                    let match = r.match(/<pre>([a-z]+:\/\/[0-9|a-z|A-Z|=]+)</);
+                    let match = r.match(/<pre>([a-z]+:\/\/[0-9|a-z|A-Z|=]+)<\/pre>/);
                     if (match != null) {
                         let m = match[1];
                         decoded.push(m);
