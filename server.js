@@ -14,10 +14,13 @@ const server = require('http').createServer((request, response) => {
                 body += data;
             });
             r.on('end', function () {
+                let matches = body.match(/img\/qr\/([0-9|a-z|A-Z]+[_|-]+[0-9|a-z|A-Z]+).png/g);
                 response.writeHead(200, {
                     'Content-Type': 'text/plain'
                 });
-                response.write(body);
+                for (var url of matches) {
+                    response.write(url);
+                }
                 response.end();
             });
         })
