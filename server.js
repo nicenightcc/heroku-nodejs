@@ -22,7 +22,7 @@ const server = require('http').createServer((request, response) => {
     console.log(request.method + ': ' + request.url);
     if (request.method === 'GET') {
         let query = url.parse(request.url, true).query;
-        if (!query.url) {
+        if (typeof query.url === 'undefined') {
             response.end();
             return;
         }
