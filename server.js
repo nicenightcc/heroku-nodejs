@@ -8,7 +8,7 @@ console.log(Promise);
 
 function getHtml(url) {
     return new Promise((resolve, reject) => {
-        http.get(query.url, (r) => {
+        http.get(url, (r) => {
             let body = '';
             r.on('data', function (data) {
                 body += data;
@@ -22,6 +22,9 @@ function getHtml(url) {
 
 const server = require('http').createServer((request, response) => {
     console.log(request.method + ': ' + request.url);
+    response.writeHead(200, {
+        'Content-Type': 'text/plain'
+    });
     if (request.method === 'GET') {
         let query = url.parse(request.url, true).query;
         if (typeof query.url === 'undefined') {
@@ -29,9 +32,6 @@ const server = require('http').createServer((request, response) => {
             return;
         }
         getHtml(query.url).then(r => {
-            response.writeHead(200, {
-                'Content-Type': 'text/plain'
-            });
             response.write(r);
             response.end();
         });
