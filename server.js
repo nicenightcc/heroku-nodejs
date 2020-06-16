@@ -43,10 +43,8 @@ const server = require('http').createServer((request, response) => {
             response.end();
             return;
         }
-        let u = atob(query.u);
-        console.log(u);
-        getHtml(u).then(r => {
-            console.log(r);
+        let queryu = atob(query.u);
+        getHtml(queryu).then(r => {
             let matches = r.match(/img\/qr\/([0-9|a-z|A-Z]+[_|-]+[0-9|a-z|A-Z]+).png/g);
             if (matches == null) {
                 response.write('404 NOT FOUND');
@@ -56,8 +54,8 @@ const server = require('http').createServer((request, response) => {
             let promises = [];
             let decoded = [];
             for (let url of matches) {
-                promises.push(getHtml('https://zxing.org/w/decode?u=' + query.url + '/' + url).then(r => {
-                    console.log(r)
+                url = 'https://zxing.org/w/decode?u=' + queryu + '/' + url;
+                promises.push(getHtml(url).then(r => {
                     let match = r.match(/<pre>([a-z]+:\/\/[0-9|a-z|A-Z|=]+)<\/pre>/);
                     if (match != null) {
                         let m = match[1];
