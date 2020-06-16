@@ -1,10 +1,10 @@
 'use strict';
 
-let http = require('http');
-let fs = require('fs');
-let url = require('url');
+const fs = require('fs');
+const url = require('url');
+const http = require('https');
 
-let server = http.createServer((request, response) => {
+const server = require('http').createServer((request, response) => {
     console.log(request.method + ': ' + request.url);
     if (request.method === 'GET') {
         let query = url.parse(request.url, true).query;
