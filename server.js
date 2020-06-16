@@ -4,6 +4,8 @@ const fs = require('fs');
 const url = require('url');
 const http = require('https');
 
+console.log(Promise);
+
 function getHtml(url) {
     return new Promise((resolve, reject) => {
         http.get(query.url, (r) => {
@@ -43,7 +45,7 @@ const server = require('http').createServer((request, response) => {
             }
             Promise.all(promises).then(r => {
                 response.end();
-            })
+            });
         });
     }
 });
