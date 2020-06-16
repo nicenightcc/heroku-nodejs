@@ -9,13 +9,19 @@ console.log(Promise);
 function getHtml(url) {
     return new Promise((resolve, reject) => {
         http.get(url, (r) => {
-            let body = '';
-            r.on('data', function (data) {
-                body += data;
-            });
-            r.on('end', function () {
-                resolve(body);
-            });
+            if (r.statusCode == 302) {
+                getHtml(r.headers.location).then(r => {
+                    resolve(r);
+                });
+            } else {
+                let body = '';
+                r.on('data', function (data) {
+                    body += data;
+                });
+                r.on('end', function () {
+                    resolve(body);
+                });
+            }
         })
     });
 }
