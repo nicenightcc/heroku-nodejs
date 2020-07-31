@@ -20,94 +20,84 @@ function atob(s) {
     }
 }
 
-async function handle(request) {
-    let query = URL.parse(request.url, true).query;
-    if (typeof query.u === 'undefined') {
-        return 'BAD REQUEST';
-    }
-    let urls = (query.u.startsWith('http') ? query.u : atob(query.u)).split(',');
-    let matches = [];
-    let decodes = [];
-    await runmulti(urls, async (url) => {
-        let html = await getHtml(url);
-        if (html == null) return;
-        let match = html.match(/([\w|-]+\/[\w|-]+\/[\w|-]+.png)/g);
-        if (match == null) return;
-        for (let m of match) matches.push(url + '/' + m);
-    });
-    await runmulti(matches, async (url) => {
-        url = 'https://zxing.org/w/decode?u=' + url;
-        let html = await getHtml(url);
-        if (html == null) return;
-        let match = html.match(/<pre>([a-z]+:\/\/[0-9|a-z|A-Z|=]+)<\/pre>/);
-        if (match != null) decodes.push(match[1]);
-    });
-    let result = decodes.join('\n');
-    return btoa(result);
-}
-async function tryfun(fun, item) {
-    try {
-        await fun(item);
-    } catch (e) {
-        console.log(['ERROR', e]);
-    }
-}
-
-function runmulti(arr, fun) {
-    return Promise.all(arr.map(item => tryfun(fun, item)));
-    // let promises = [];
-    // for (let item of arr) {
-    //     promises.push(tryfun(item));
-    // }
-    // return Promise.all(arr.map(async (item) => {
-    //     try {
-    //         await fun(item);
-    //     } catch (e) {
-    //         console.log(['ERROR', e]);
-    //     }
-    // }));
+function multitask(arr, fun) {
+    return Promise.all(arr.map((item) => fun(item)));
 }
 
 function getHtml(url) {
     return new Promise((resolve) => {
         ! function get(url) {
-            if (url.substring(0, 4) != 'http') url = 'http://' + url.replace(/^[\/]+/, '');
-            (url[4] == "s" ? HTTPS.get : HTTP.get)(url, (res) => {
-                if (res.statusCode == 200) {
-                    let body = '';
-                    res.on('data', (data) => body += data);
-                    res.on('end', () => {
-                        let match = body.replace(/ /g, '').match(/metahttp-equiv=["']*refresh["']*content=["\d;]*url=([^"'>,]+)/);
-                        if (match != null) {
-                            get(match[1][0] == '/' ? (url.match(/^([a-z|A-Z]+:\/\/[^\/]+)/)[1] + match[1]) : match[1]);
-                        } else {
-                            resolve(body);
-                        }
-                    });
-                } else if (res.statusCode == 302) {
-                    get(res.headers.location);
-                } else {
-                    console.log(['ERROR', res.statusCode + ', ' + res.statusMessage + ', ' + url]);
+            try {
+                if (url.substring(0, 4) != 'http') url = 'http://' + url.replace(/^[\/]+/, '');
+                (url[4] == "s" ? HTTPS.get : HTTP.get)(url, (res) => {
+                    if (res.statusCode == 200) {
+                        let body = '';
+                        res.on('data', (data) => body += data);
+                        res.on('end', () => {
+                            let match = body.replace(/ /g, '').match(/metahttp-equiv=["']*refresh["']*content=["\d;]*url=([^"'>,]+)/);
+                            if (match != null) {
+                                get(match[1][0] == '/' ? (url.match(/^([a-z|A-Z]+:\/\/[^\/]+)/)[1] + match[1]) : match[1]);
+                            } else {
+                                resolve(body);
+                            }
+                        });
+                    } else if (res.statusCode == 302) {
+                        get(res.headers.location);
+                    } else {
+                        console.log(['ERROR', res.statusCode + ', ' + res.statusMessage + ', ' + url]);
+                        resolve();
+                    }
+                }).on('error', (e) => {
+                    console.log(['ERROR', e]);
                     resolve();
-                }
-            }).on('error', (e) => {
+                });
+            } catch (e) {
                 console.log(['ERROR', e]);
                 resolve();
-            });
+            }
         }(url);
     });
 }
 
+function handle(request) {
+    return new Promise((resolve) => {
+        let query = URL.parse(request.url, true).query;
+        if (typeof query.u === 'undefined') {
+            return 'BAD REQUEST';
+        }
+        let urls = (query.u.startsWith('http') ? query.u : atob(query.u)).split(',');
+        let matches = [];
+        let decodes = [];
 
-const server = HTTP.createServer(async (request, response) => {
+        multitask(urls, (url) =>
+            getHtml(url).then(html => {
+                if (html == null) return;
+                let match = html.match(/([\w|-]+\/[\w|-]+\/[\w|-]+.png)/g);
+                if (match == null) return;
+                for (let m of match) matches.push(url + '/' + m);
+            })
+        ).then(() =>
+            multitask(matches, (url) =>
+                getHtml('https://zxing.org/w/decode?u=' + url).then(html => {
+                    if (html == null) return;
+                    let match = html.match(/<pre>([a-z]+:\/\/[0-9|a-z|A-Z|=]+)<\/pre>/);
+                    if (match != null) decodes.push(match[1]);
+                }))
+        ).then(() => {
+            let result = decodes.join('\n');
+            resolve(btoa(result));
+        })
+    });
+}
+
+const server = HTTP.createServer((request, response) => {
     console.log([request.method, request.url]);
     if (request.method === 'GET' && /^\/\?u=/.test(request.url)) {
         response.writeHead(200, {
             'Content-Type': 'text/plain'
         });
         try {
-            let result = await handle(request);
-            response.write(result);
+            handle(request).then(result => response.write(result));
         } catch (e) {
             console.log(['ERROR', e]);
             response.write('SERVER ERROR');
