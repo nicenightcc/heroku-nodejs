@@ -19,16 +19,16 @@ function atob(s) {
         console.log(['ERROR', e]);
     }
 }
+async function tryfun(fun, item) {
+    try {
+        await fun(item);
+    } catch (e) {
+        console.log(['ERROR', e]);
+    }
+};
 
 function runmulti(arr, fun) {
-    let tryfun = async (item) => {
-        try {
-            await fun(item);
-        } catch (e) {
-            console.log(['ERROR', e]);
-        }
-    };
-    return Promise.all(arr.map(item => tryfun(item)));
+    return Promise.all(arr.map(item => tryfun(fun, item)));
     // let promises = [];
     // for (let item of arr) {
     //     promises.push(tryfun(item));
