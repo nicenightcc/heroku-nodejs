@@ -80,15 +80,16 @@ function handle(request) {
                 if (match == null) return;
                 for (let m of match) matches.push(url + '/' + m);
                 let match2 = html.match(/(vmess:\/\/[0-9|a-z|A-Z|=]+)/g);
-                if (match2 != null)
-                    for (let m of match2) decodes.push(m);
+                if (match2 == null) return;
+                for (let m of match2)
+                    if (decodes.indexOf(m) < 0) decodes.push(m);
             })
         ).then(() =>
             multitask(matches, (url) =>
                 getHtml('https://zxing.org/w/decode?u=' + url).then(html => {
                     if (html == null) return;
                     let match = html.match(/<pre>([a-z]+:\/\/[0-9|a-z|A-Z|=]+)<\/pre>/);
-                    if (match != null) decodes.push(match[1]);
+                    if (match != null && decodes.indexOf(match[1]) < 0) decodes.push(match[1]);
                 }))
         ).then(() => {
             let result = decodes.join('\n');
