@@ -21,13 +21,25 @@ function atob(s) {
 }
 
 function multitask(arr, fun) {
-    return Promise.all(arr.map(async (item) => {
+    let tryfun = async (item) => {
         try {
             await fun(item);
         } catch (e) {
             console.log(['ERROR', e]);
         }
-    }));
+    };
+    return Promise.all(arr.map(item => tryfun(item)));
+    // let promises = [];
+    // for (let item of arr) {
+    //     promises.push(tryfun(item));
+    // }
+    // return Promise.all(arr.map(async (item) => {
+    //     try {
+    //         await fun(item);
+    //     } catch (e) {
+    //         console.log(['ERROR', e]);
+    //     }
+    // }));
 }
 
 function getHtml(url) {
