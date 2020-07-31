@@ -20,7 +20,7 @@ function atob(s) {
     }
 }
 
-function multitask(arr, fun) {
+function runmulti(arr, fun) {
     let tryfun = async (item) => {
         try {
             await fun(item);
@@ -80,14 +80,14 @@ async function handle(request) {
     let urls = (query.u.startsWith('http') ? query.u : atob(query.u)).split(',');
     let matches = [];
     let decodes = [];
-    await multitask(urls, async (url) => {
+    await runmulti(urls, async (url) => {
         let html = await getHtml(url);
         if (html == null) return;
         let match = html.match(/([\w|-]+\/[\w|-]+\/[\w|-]+.png)/g);
         if (match == null) return;
         for (let m of match) matches.push(url + '/' + m);
     });
-    await multitask(matches, async (url) => {
+    await runmulti(matches, async (url) => {
         url = 'https://zxing.org/w/decode?u=' + url;
         let html = await getHtml(url);
         if (html == null) return;
