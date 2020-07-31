@@ -44,8 +44,10 @@ function qrDecode(url) {
                     let result = match[1];
                     if (qrcache.find(x => x[0] == url) == null) qrcache.push([url, result]);
                     resolve(result);
+                    return;
                 }
             }
+            resolve();
         });
         if (qrcache.length > 10) {
             qrcache.slice(0, qrcache.length - 10);
@@ -114,7 +116,7 @@ function handle(request) {
         ).then(() =>
             multitask(matches, url =>
                 qrDecode(url).then(result => {
-                    if (decodes.indexOf(result) < 0) decodes.push(result);
+                    if (result != null && decodes.indexOf(result) < 0) decodes.push(result);
                 }))
         ).then(() => {
             let result = decodes.join('\n');
