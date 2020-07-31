@@ -101,14 +101,18 @@ const server = HTTP.createServer((request, response) => {
             'Content-Type': 'text/plain'
         });
         try {
-            handle(request).then(result => response.write(result));
+            handle(request).then(result => {
+                response.write(result);
+                response.end();
+            });
         } catch (e) {
             console.log(['ERROR', e]);
             response.write('SERVER ERROR');
+            response.end();
         }
+    } else {
+        response.end();
     }
-    response.end();
-
 });
 
 let serverPort = process.env.PORT || 5000;
