@@ -82,7 +82,7 @@ function handle(request) {
             })
         ).then(() =>
             multitask(matches, (url) =>
-                getHtml('https://zxing.org/w/decode?u=' + encodeURI(url)).then(html => {
+                getHtml('https://zxing.org/w/decode?u=' + url).then(html => {
                     if (html == null) return;
                     let match = html.match(/<pre>([a-z]+:\/\/[0-9|a-z|A-Z|=]+)<\/pre>/);
                     if (match != null) decodes.push(match[1]);
