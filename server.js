@@ -28,6 +28,31 @@ function multitask(arr, fun) {
     return Promise.all(arr.map((item) => fun(item)));
 }
 
+let qrcache = [];
+
+function qrDecode(url) {
+    return new Promise((resolve) => {
+        let cache = qrcache.find(x => x[0] == url);
+        if (cache != null) {
+            resolve(cache[1]);
+            return;
+        }
+        getHtml('https://zxing.org/w/decode?u=' + url).then(html => {
+            if (html != null) {
+                let match = html.match(/<pre>([a-z]+:\/\/[0-9|a-z|A-Z|=]+)<\/pre>/);
+                if (match != null) {
+                    let result = match[1];
+                    if (qrcache.find(x => x[0] == url) == null) qrcache.push([url, result]);
+                    resolve(result);
+                }
+            }
+        });
+        if (qrcache.length > 10) {
+            qrcache.slice(0, qrcache.length - 10);
+        }
+    });
+}
+
 function getHtml(url) {
     return new Promise((resolve) => {
         ! function get(url) {
@@ -73,23 +98,23 @@ function handle(request) {
         let matches = [];
         let decodes = [];
 
-        multitask(urls, (url) =>
+        multitask(urls, url =>
             getHtml(url).then(html => {
                 if (html == null) return;
                 let match = html.match(/([\w|-]+\/[\w|-]+\/[\w|-]+.png)/g);
-                if (match == null) return;
-                for (let m of match) matches.push(url + '/' + m);
+                if (match != null) {
+                    for (let m of match) matches.push(url + '/' + m);
+                }
                 let match2 = html.match(/(vmess:\/\/[0-9|a-z|A-Z|=]+)/g);
-                if (match2 == null) return;
-                for (let m of match2)
-                    if (decodes.indexOf(m) < 0) decodes.push(m);
+                if (match2 != null) {
+                    for (let m of match2)
+                        if (decodes.indexOf(m) < 0) decodes.push(m);
+                }
             })
         ).then(() =>
-            multitask(matches, (url) =>
-                getHtml('https://zxing.org/w/decode?u=' + url).then(html => {
-                    if (html == null) return;
-                    let match = html.match(/<pre>([a-z]+:\/\/[0-9|a-z|A-Z|=]+)<\/pre>/);
-                    if (match != null && decodes.indexOf(match[1]) < 0) decodes.push(match[1]);
+            multitask(matches, url =>
+                qrDecode(url).then(result => {
+                    if (decodes.indexOf(result) < 0) decodes.push(result);
                 }))
         ).then(() => {
             let result = decodes.join('\n');
