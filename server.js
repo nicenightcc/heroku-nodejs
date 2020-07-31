@@ -79,6 +79,9 @@ function handle(request) {
                 let match = html.match(/([\w|-]+\/[\w|-]+\/[\w|-]+.png)/g);
                 if (match == null) return;
                 for (let m of match) matches.push(url + '/' + m);
+                let match2 = html.match(/(vmess:\/\/[0-9|a-z|A-Z|=]+)/g);
+                if (match2 != null)
+                    for (let m of match2) decodes.push(m);
             })
         ).then(() =>
             multitask(matches, (url) =>
