@@ -19,13 +19,39 @@ function atob(s) {
         console.log(['ERROR', e]);
     }
 }
+
+async function handle(request) {
+    let query = URL.parse(request.url, true).query;
+    if (typeof query.u === 'undefined') {
+        return 'BAD REQUEST';
+    }
+    let urls = (query.u.startsWith('http') ? query.u : atob(query.u)).split(',');
+    let matches = [];
+    let decodes = [];
+    await runmulti(urls, async (url) => {
+        let html = await getHtml(url);
+        if (html == null) return;
+        let match = html.match(/([\w|-]+\/[\w|-]+\/[\w|-]+.png)/g);
+        if (match == null) return;
+        for (let m of match) matches.push(url + '/' + m);
+    });
+    await runmulti(matches, async (url) => {
+        url = 'https://zxing.org/w/decode?u=' + url;
+        let html = await getHtml(url);
+        if (html == null) return;
+        let match = html.match(/<pre>([a-z]+:\/\/[0-9|a-z|A-Z|=]+)<\/pre>/);
+        if (match != null) decodes.push(match[1]);
+    });
+    let result = decodes.join('\n');
+    return btoa(result);
+}
 async function tryfun(fun, item) {
     try {
         await fun(item);
     } catch (e) {
         console.log(['ERROR', e]);
     }
-};
+}
 
 function runmulti(arr, fun) {
     return Promise.all(arr.map(item => tryfun(fun, item)));
@@ -72,31 +98,6 @@ function getHtml(url) {
     });
 }
 
-async function handle(request) {
-    let query = URL.parse(request.url, true).query;
-    if (typeof query.u === 'undefined') {
-        return 'BAD REQUEST';
-    }
-    let urls = (query.u.startsWith('http') ? query.u : atob(query.u)).split(',');
-    let matches = [];
-    let decodes = [];
-    await runmulti(urls, async (url) => {
-        let html = await getHtml(url);
-        if (html == null) return;
-        let match = html.match(/([\w|-]+\/[\w|-]+\/[\w|-]+.png)/g);
-        if (match == null) return;
-        for (let m of match) matches.push(url + '/' + m);
-    });
-    await runmulti(matches, async (url) => {
-        url = 'https://zxing.org/w/decode?u=' + url;
-        let html = await getHtml(url);
-        if (html == null) return;
-        let match = html.match(/<pre>([a-z]+:\/\/[0-9|a-z|A-Z|=]+)<\/pre>/);
-        if (match != null) decodes.push(match[1]);
-    });
-    let result = decodes.join('\n');
-    return btoa(result);
-}
 
 const server = HTTP.createServer(async (request, response) => {
     console.log([request.method, request.url]);
